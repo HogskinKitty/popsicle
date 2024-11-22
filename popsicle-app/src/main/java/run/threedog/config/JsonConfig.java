@@ -46,7 +46,7 @@ public class JsonConfig {
     public static class StringToLocalDateTime implements Converter<String, LocalDateTime> {
         
         @Override
-        public LocalDateTime convert( String str) {
+        public LocalDateTime convert(String str) {
             if (StringUtils.isBlank(str)) {
                 return null;
             }

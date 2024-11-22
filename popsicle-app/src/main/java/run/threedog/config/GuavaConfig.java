@@ -9,12 +9,10 @@ import java.util.concurrent.TimeUnit;
 
 @Configuration
 public class GuavaConfig {
-
+    
     @Bean(name = "cache")
     public Cache<String, String> cache() {
-        return CacheBuilder.newBuilder()
-                .expireAfterWrite(3, TimeUnit.SECONDS)
-                .build();
+        return CacheBuilder.newBuilder().expireAfterWrite(3, TimeUnit.SECONDS).build();
     }
-
+    
 }
