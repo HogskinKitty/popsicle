@@ -1,5 +1,5 @@
 CONTAINER_NAME=popsicle
-IMAGE_NAME=system/popsicle:1.0-SNAPSHOT
+IMAGE_NAME=hogskinkitty/popsicle-app:1.0-SNAPSHOT
 PORT=8091
 
 echo "容器部署开始 ${CONTAINER_NAME}"
