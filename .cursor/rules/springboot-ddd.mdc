@@ -1,0 +1,393 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# SpringBoot DDD架构风格设计规范
+
+本文档提供了基于领域驱动设计(DDD)的SpringBoot项目架构规范，旨在指导开发团队构建结构清晰、易于维护的应用程序。
+
+## 1. DDD分层架构和模块组织
+
+当前项目遵循DDD (领域驱动设计)架构风格，主要分为以下模块：
+
+### 1.1 模块职责划分
+
+1. **popsicle-api**: 
+   - 职责：定义对外的API接口和DTO(数据传输对象)
+   - 包含：API接口定义、请求/响应DTO、API文档
+
+2. **popsicle-application**: 
+   - 职责：应用层，编排领域服务，处理用例
+   - 包含：应用服务、命令处理、查询处理
+
+3. **popsicle-domain**: 
+   - 职责：领域层，包含核心业务逻辑
+   - 包含：聚合根、实体、值对象、领域服务、领域事件、仓储接口
+
+4. **popsicle-infrastructure**: 
+   - 职责：基础设施层，提供技术实现
+   - 包含：仓储实现、事件发布、消息队列、外部API调用、持久化对象
+
+5. **popsicle-trigger**: 
+   - 职责：触发器层，处理外部请求/事件
+   - 包含：HTTP控制器、定时任务、事件监听器
+
+6. **popsicle-boot**: 
+   - 职责：应用启动与配置
+   - 包含：主应用类、配置类、资源文件
+
+7. **popsicle-types**: 
+   - 职责：通用类型定义
+   - 包含：枚举、异常、通用模型、处理器
+
+### 1.2 DDD模块依赖关系规则
+
+1. **模块依赖方向**:
+   - API层不依赖任何层
+   - 应用层依赖领域层
+   - 领域层只依赖Types层，不应依赖其他模块
+   - 基础设施层依赖领域层
+   - 触发层依赖应用层、Types层、API层
+   - 启动层依赖触发层、基础设施层
+
+2. **依赖关系图**:
+```
+   - `popsicle-domain` → `popsicle-types`
+   - `popsicle-application` → `popsicle-domain`
+   - `popsicle-infrastructure` → `popsicle-domain`
+   - `popsicle-trigger` → `popsicle-application`, `popsicle-domain`, `popsicle-api`
+   - `popsicle-boot` → `popsicle-trigger`, `popsicle-infrastructure`
+   
+   (符号 "→" 表示 "依赖于")
+```
+
+## 2. 领域层 (popsicle-domain) 设计规范
+
+### 2.1 领域结构组织
+
+```
+popsicle-domain/
+└── src/main/java/cn/culpro/domain/
+    ├── ${聚合名}/                     # 按聚合名称组织
+    │   ├── adapter/                  # 适配器
+    │   │   ├── event/                # 领域事件定义
+    │   │   ├── port/                 # 接口定义
+    │   │   └── repository/           # 仓储接口定义
+    │   ├── model/                    # 领域模型
+    │   │   ├── aggregate/            # 聚合根
+    │   │   ├── entity/               # 实体
+    │   │   └── valobj/               # 值对象
+    │   └── service/                  # 领域服务
+    ├── ${聚合名2}/                    # 其他聚合
+    └── ...
+```
+
+### 2.2 领域对象规范
+
+1. **聚合根 (Aggregate Root)** 
+   - 必须实现唯一标识
+   - 负责维护聚合内部一致性
+   - 是外部访问聚合内实体的唯一入口
+   - 命名为`${聚合名}Aggregate`
+
+2. **实体 (Entity)**
+   - 具有唯一标识
+   - 拥有生命周期
+   - 命名为`${实体名}Entity`
+   - 使用 Lombok 简化 getter/setter、构造
+
+3. **值对象 (Value Object)**
+   - 不可变
+   - 无唯一标识
+   - 用于描述领域特征
+   - 命名为`${值对象名}VO`
+
+4. **领域服务 (Domain Service)**
+   - 处理跨聚合的业务逻辑
+   - 命名为`I${服务名}Service`，具体实现命名`${服务名}Service`
+
+5. **仓储接口 (Repository Interface)**
+   - 定义聚合的持久化方法
+   - 命名为`I${聚合名}Repository`
+
+6. **领域事件 (Domain Event)**
+   - 表示领域中发生的事件
+   - 命名为`${事件名}Event`
+
+## 3. 应用层 (popsicle-application) 设计规范
+
+### 3.1 应用层结构
+
+```
+popsicle-application/
+└── src/main/java/cn/culpro/application/
+    ├── ${业务模块}/                   # 按业务模块组织
+    │   ├── command/                 # 命令处理
+    │   │   ├── Command.java         # 命令对象
+    │   │   └── Handler.java         # 命令处理器
+    │   ├── query/                   # 查询处理
+    │   │   ├── Query.java           # 查询对象
+    │   │   └── Handler.java         # 查询处理器
+    │   └── service/                 # 应用服务
+    │       └── ${业务功能}Service.java # 应用服务实现
+    └── ...
+```
+
+### 3.2 应用服务规范
+
+1. **命令查询职责分离 (CQRS)**
+   - 命令(修改状态): 使用Command对象和Handler
+   - 查询(不修改状态): 使用Query对象和Handler
+
+2. **应用服务职责**
+   - 协调多个领域服务
+   - 处理事务边界
+   - 不包含业务逻辑
+   - 命名为`${服务名}ApplicationService`
+
+3. **事件处理**
+   - 处理领域事件
+   - 协调多个聚合之间的操作
+   - 命名为`${事件名}EventHandler`
+
+## 4. 基础设施层 (popsicle-infrastructure) 设计规范
+
+### 4.1 基础设施层结构
+
+```
+popsicle-infrastructure/
+└── src/main/java/cn/culpro/infrastructure/
+    ├── adapter/                   # 适配器
+    │   ├── port/                  # 接口实现
+    │   └── repository/            # 仓储实现
+    ├── dao/                       # 数据访问
+    │   ├── mapper/                # MyBatis Mapper
+    │   ├── po/                    # 持久化对象
+    │   │   └── converter/         # PO与领域对象转换器
+    ├── event/                     # 事件实现
+    ├── gateway/                   # 外部系统网关
+    │   └── dto/                   # 外部系统DTO
+    └── redis/                     # Redis实现
+```
+
+### 4.2 基础设施实现规范
+
+1. **仓储实现**
+   - 实现领域层定义的仓储接口
+   - 命名为`${聚合名}Repository`
+   - 负责对象的持久化和数据库交互
+
+2. **持久化对象 (PO)**
+   - 与数据库表结构一一对应
+   - 使用 Lombok 简化 getter/setter、构造
+   - 命名为`${表名}PO`
+
+3. **对象转换器**
+   - 使用MapStruct进行对象转换
+   - 负责PO与领域对象之间的转换
+   - 命名为`${对象名}Converter`
+
+4. **防腐层 (ACL)**
+   - 封装外部系统交互
+   - 隔离外部系统，防止污染领域模型
+   - 命名为`${外部系统名}Gateway`
+
+## 5. 触发层 (popsicle-trigger) 设计规范
+
+### 5.1 触发层结构
+
+```
+popsicle-trigger/
+└── src/main/java/cn/culpro/trigger/
+    ├── http/                     # HTTP控制器
+    │   └── ${功能模块}Controller.java
+    ├── job/                      # 定时任务
+    │   └── ${任务名}Job.java
+    └── listener/                 # 事件监听器
+        └── ${事件名}Listener.java
+```
+
+### 5.2 HTTP控制器规范
+
+1. **控制器职责**
+   - 处理HTTP请求
+   - 参数校验
+   - 调用应用服务
+   - 格式化响应
+   - 异常处理
+
+2. **命名与路径**
+   - 命名为`${功能模块}Controller`
+   - URI遵循RESTful设计原则
+   - 请求/响应使用api模块中的DTO对象
+
+### 5.3 定时任务规范
+
+1. **任务职责**
+   - 定时触发应用功能
+   - 仅负责调度，不包含业务逻辑
+   - 命名为`${任务名}Job`
+
+### 5.4 事件监听器规范
+
+1. **监听器职责**
+   - 监听特定事件
+   - 触发应用功能
+   - 命名为`${事件名}Listener`
+
+## 6. API层 (popsicle-api) 设计规范
+
+### 6.1 API层结构
+
+```
+popsicle-api/
+└── src/main/java/cn/culpro/api/
+    ├── dto/                       # 数据传输对象
+    │   ├── request/               # 请求DTO
+    │   └── response/              # 响应DTO
+    └── response/                  # 统一响应封装
+```
+
+### 6.2 DTO设计规范
+
+1. **职责**
+   - 定义系统对外的数据结构
+   - 不包含业务逻辑
+   - 仅包含数据和简单的校验规则
+
+2. **命名**
+   - 请求DTO: `${功能}Request`
+   - 响应DTO: `${功能}Response`
+   - 分页请求: `${功能}PageRequest`
+   - 分页响应: `${功能}PageResponse`
+
+3. **校验**
+   - 使用JSR-303 Bean Validation注解
+   - 分组校验根据不同场景定义不同分组
+
+## 7. 类型层 (popsicle-types) 设计规范
+
+### 7.1 类型层结构
+
+```
+popsicle-types/
+└── src/main/java/cn/culpro/types/
+    ├── common/                   # 通用类
+    ├── enums/                    # 枚举定义
+    ├── exception/                # 异常定义
+    ├── event/                    # 基类事件抽象
+    ├── handler/                  # 处理器
+    └── model/                    # 通用模型
+```
+
+### 7.2 类型定义规范
+
+1. **枚举**
+   - 使用枚举表示固定的值集合
+   - 提供描述和代码
+   - 命名为`${类型名}Enum`
+
+2. **异常**
+   - 继承自特定的异常基类
+   - 定义错误码和错误消息
+   - 命名为`${异常类型}Exception`
+
+3. **通用模型**
+   - 跨领域的通用模型定义
+   - 命名为`${模型名}`
+
+## 8. 启动层 (popsicle-boot) 设计规范
+
+### 8.1 启动层结构
+
+```
+popsicle-boot/
+└── src/
+    ├── main/
+    │   ├── java/cn/culpro/
+    │   │   └── config/           # 配置类
+    │   │       ├── db/           # 数据库配置
+    │   │       ├── security/     # 安全配置
+    │   │       └── web/          # Web配置
+    │   └── resources/
+    │       ├── application.yml   # 主配置文件
+    │       ├── application-*.yml # 环境配置文件
+    │       └── mybatis/          # MyBatis配置和映射
+    └── test/                     # 测试代码
+```
+
+### 8.2 配置规范
+
+1. **配置类命名**
+   - 命名为`${配置类型}Configuration`
+
+2. **属性配置**
+   - 使用`@ConfigurationProperties`绑定配置属性
+   - 外部化配置，不硬编码
+
+3. **环境配置**
+   - 开发环境: application-dev.yml
+   - 测试环境: application-test.yml
+   - 生产环境: application-prod.yml
+
+## 9. 横切关注点
+
+### 9.1 日志规范
+
+1. **日志级别**
+   - ERROR: 影响系统运行的错误
+   - WARN: 不影响系统但需要注意的警告
+   - INFO: 关键业务操作信息
+   - DEBUG: 调试信息
+   - TRACE: 详细追踪信息
+
+2. **日志内容**
+   - 包含上下文信息
+   - 使用MDC记录跟踪ID
+   - 敏感信息脱敏
+
+### 9.2 异常处理规范
+
+1. **异常分类**
+   - 业务异常: 可预见的业务规则违反
+   - 系统异常: 不可预见的系统错误
+
+2. **异常处理策略**
+   - 使用`@ControllerAdvice`统一处理Controller异常
+   - 业务异常转化为友好提示
+   - 系统异常记录日志并返回通用错误码
+
+### 9.3 事务管理规范
+
+1. **事务边界**
+   - 应用服务层定义事务边界
+   - 使用`@Transactional`注解
+   - 明确传播行为和隔离级别
+
+2. **事务配置**
+   - 读操作: PROPAGATION_SUPPORTS, READ_COMMITTED
+   - 写操作: PROPAGATION_REQUIRED, READ_COMMITTED
+   - 复杂业务: 考虑分布式事务
+
+### 9.4 安全规范
+
+1. **认证授权**
+   - 使用JWT进行无状态认证
+   - 基于角色/权限的授权控制
+   - 敏感操作二次验证
+
+2. **数据安全**
+   - 敏感数据加密存储
+   - 传输使用HTTPS
+   - 应用参数校验防注入攻击
+
+## 10. 遵循DDD概念和原则
+
+1. **统一语言**: 业务术语与代码一致，确保团队沟通无障碍
+2. **有界上下文**: 明确定义每个领域的边界，避免混淆
+3. **聚合**: 确保聚合边界清晰，保证内部一致性
+4. **领域事件**: 使用事件通知领域状态变化
+5. **值对象不变性**: 确保值对象创建后不可修改
+6. **实体唯一性**: 实体通过ID标识，而非属性比较
+7. **防腐层**: 隔离外部系统，防止污染领域模型
