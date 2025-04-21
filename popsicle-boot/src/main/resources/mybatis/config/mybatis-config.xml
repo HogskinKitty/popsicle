@@ -3,7 +3,29 @@
     PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
     "http://mybatis.org/dtd/mybatis-3-config.dtd">
 <configuration>
-    <!-- 暂时未使用 文档：https://mybatis.org/mybatis-3/zh/configuration.html#typeAliases -->
+    <settings>
+        <!-- 开启 SQL 日志打印 -->
+        <setting name="logImpl" value="STDOUT_LOGGING"/>
+        <!--            &lt;!&ndash; 使用驼峰命名法转换字段 &ndash;&gt;-->
+        <!--            <setting name="mapUnderscoreToCamelCase" value="true"/>-->
+        <!--            &lt;!&ndash; 开启二级缓存 &ndash;&gt;-->
+        <!--            <setting name="cacheEnabled" value="true"/>-->
+        <!--            &lt;!&ndash; 延迟加载的全局开关 &ndash;&gt;-->
+        <!--            <setting name="lazyLoadingEnabled" value="true"/>-->
+        <!--            &lt;!&ndash; 设置本地缓存范围 session:就会有数据的共享 statement:语句范围 (这样就不会有数据的共享) &ndash;&gt;-->
+        <!--            <setting name="localCacheScope" value="SESSION"/>-->
+        <!--            &lt;!&ndash; 允许JDBC 支持自动生成主键 &ndash;&gt;-->
+        <!--            <setting name="useGeneratedKeys" value="true"/>-->
+        <!--            &lt;!&ndash; 配置默认的执行器 &ndash;&gt;-->
+        <!--            <setting name="defaultExecutorType" value="REUSE"/>-->
+        <!--            &lt;!&ndash; 全局启用或禁用延迟加载 &ndash;&gt;-->
+        <!--            <setting name="lazyLoadingEnabled" value="true"/>-->
+        <!--            &lt;!&ndash; 设置超时时间 &ndash;&gt;-->
+        <!--            <setting name="defaultStatementTimeout" value="25000"/>-->
+    </settings>
+    
+    <!-- 类型别名 -->
     <typeAliases>
+        <package name="cn.culpro.infrastructure.dao.po"/>
     </typeAliases>
 </configuration>

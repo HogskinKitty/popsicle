@@ -3,6 +3,12 @@ package cn.culpro.config;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+/**
+ * 线程池配置属性
+ *
+ * @author HogskinKitty
+ * @date 2025/04/20
+ */
 @Data
 @ConfigurationProperties(prefix = "thread.pool.executor.config", ignoreInvalidFields = true)
 public class ThreadPoolConfigProperties {

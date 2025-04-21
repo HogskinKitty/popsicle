@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.culpro.infrastructure.dao.IMenuDao">
+    <!-- 菜单结果映射 -->
+    <resultMap id="MenuMap" type="cn.culpro.infrastructure.dao.po.MenuPO">
+        <id column="menu_id" property="menuId"/>
+        <result column="menu_name" property="menuName"/>
+        <result column="parent_id" property="parentId"/>
+        <result column="order_num" property="orderNum"/>
+        <result column="path" property="path"/>
+        <result column="component" property="component"/>
+        <result column="query" property="query"/>
+        <result column="is_frame" property="isFrame"/>
+        <result column="is_cache" property="isCache"/>
+        <result column="menu_type" property="menuType"/>
+        <result column="visible" property="visible"/>
+        <result column="status" property="status"/>
+        <result column="permission" property="permission"/>
+        <result column="icon" property="icon"/>
+        <result column="remark" property="remark"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+    
+    <!-- 新增菜单 -->
+    <insert id="insert" parameterType="cn.culpro.infrastructure.dao.po.MenuPO" useGeneratedKeys="true" keyProperty="menuId">
+        INSERT INTO menu (menu_name, parent_id, order_num, path, component,
+                          query, is_frame, is_cache, menu_type, visible,
+                          status, permission, icon, remark)
+        VALUES (#{menuName}, #{parentId}, #{orderNum}, #{path}, #{component},
+                #{query}, #{isFrame}, #{isCache}, #{menuType}, #{visible},
+                #{status}, #{permission}, #{icon}, #{remark})
+    </insert>
+    
+    <!-- 更新菜单 -->
+    <update id="update" parameterType="cn.culpro.infrastructure.dao.po.MenuPO">
+        UPDATE menu
+        <set>
+            <if test="menuName != null">
+                menu_name = #{menuName},
+            </if>
+            <if test="parentId != null">
+                parent_id = #{parentId},
+            </if>
+            <if test="orderNum != null">
+                order_num = #{orderNum},
+            </if>
+            <if test="path != null">
+                path = #{path},
+            </if>
+            <if test="component != null">
+                component = #{component},
+            </if>
+            <if test="query != null">
+                query = #{query},
+            </if>
+            <if test="isFrame != null">
+                is_frame = #{isFrame},
+            </if>
+            <if test="isCache != null">
+                is_cache = #{isCache},
+            </if>
+            <if test="menuType != null">
+                menu_type = #{menuType},
+            </if>
+            <if test="visible != null">
+                visible = #{visible},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="permission != null">
+                permission = #{permission},
+            </if>
+            <if test="icon != null">
+                icon = #{icon},
+            </if>
+            <if test="remark != null">
+                remark = #{remark},
+            </if>
+        </set>
+        WHERE menu_id = #{menuId}
+    </update>
+    
+    <!-- 根据菜单ID查询菜单 -->
+    <select id="selectById" resultMap="MenuMap">
+        SELECT *
+        FROM menu
+        WHERE menu_id = #{menuId}
+    </select>
+    
+    <!-- 根据权限标识查询菜单 -->
+    <select id="selectByPermission" resultMap="MenuMap">
+        SELECT *
+        FROM menu
+        WHERE permission = #{permission}
+    </select>
+    
+    <!-- 查询所有菜单 -->
+    <select id="selectAll" resultMap="MenuMap">
+        SELECT *
+        FROM menu
+        ORDER BY parent_id, order_num
+    </select>
+    
+    <!-- 根据父级ID查询菜单 -->
+    <select id="selectByParentId" resultMap="MenuMap">
+        SELECT *
+        FROM menu
+        WHERE parent_id = #{parentId}
+        ORDER BY order_num
+    </select>
+    
+    <!-- 根据菜单类型查询菜单 -->
+    <select id="selectByMenuType" resultMap="MenuMap">
+        SELECT *
+        FROM menu
+        WHERE menu_type = #{menuType}
+        ORDER BY parent_id, order_num
+    </select>
+    
+    <!-- 根据角色ID查询菜单 -->
+    <select id="selectByRoleId" resultMap="MenuMap">
+        SELECT m.*
+        FROM menu m
+                 INNER JOIN role_menu rm ON m.menu_id = rm.menu_id
+        WHERE rm.role_id = #{roleId}
+        ORDER BY m.parent_id, m.order_num
+    </select>
+    
+    <!-- 根据用户ID查询菜单 -->
+    <select id="selectByUserId" resultMap="MenuMap">
+        SELECT DISTINCT m.*
+        FROM menu m
+                 INNER JOIN role_menu rm ON m.menu_id = rm.menu_id
+                 INNER JOIN user_role ur ON rm.role_id = ur.role_id
+        WHERE ur.user_id = #{userId}
+        ORDER BY m.parent_id, m.order_num
+    </select>
+</mapper> 

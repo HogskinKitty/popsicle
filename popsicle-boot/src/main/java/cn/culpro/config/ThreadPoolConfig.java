@@ -13,12 +13,31 @@ import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * 线程池配置类
+ * <p>
+ * 配置系统线程池，支持异步任务执行
+ *
+ * @author HogskinKitty
+ * @date 2025/04/19
+ */
 @Slf4j
 @EnableAsync
 @Configuration
 @EnableConfigurationProperties(ThreadPoolConfigProperties.class)
 public class ThreadPoolConfig {
     
+    /**
+     * 创建线程池执行器
+     * <p>
+     * 根据配置参数创建自定义线程池，支持不同的拒绝策略
+     *
+     * @param properties 线程池配置属性
+     * @return 线程池执行器实例
+     * @throws ClassNotFoundException 找不到类异常
+     * @throws InstantiationException 实例化异常
+     * @throws IllegalAccessException 非法访问异常
+     */
     @Bean
     @ConditionalOnMissingBean(ThreadPoolExecutor.class)
     public ThreadPoolExecutor threadPoolExecutor(ThreadPoolConfigProperties properties)

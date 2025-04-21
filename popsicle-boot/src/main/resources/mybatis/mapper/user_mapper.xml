@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.culpro.infrastructure.dao.IUserDao">
+    <!-- 用户结果映射 -->
+    <resultMap id="UserMap" type="cn.culpro.infrastructure.dao.po.UserPO">
+        <id column="user_id" property="userId"/>
+        <result column="username" property="username"/>
+        <result column="password" property="password"/>
+        <result column="real_name" property="realName"/>
+        <result column="gender" property="gender"/>
+        <result column="avatar" property="avatar"/>
+        <result column="email" property="email"/>
+        <result column="phone_number" property="phoneNumber"/>
+        <result column="status" property="status"/>
+        <result column="delete_status" property="deleteStatus"/>
+        <result column="remark" property="remark"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+    
+    <!-- 用户角色关联结果映射 -->
+    <resultMap id="UserRoleMap" type="cn.culpro.infrastructure.dao.po.UserRolePO">
+        <result column="user_id" property="userId"/>
+        <result column="role_id" property="roleId"/>
+    </resultMap>
+    
+    <!-- 新增用户 -->
+    <insert id="insert" parameterType="cn.culpro.infrastructure.dao.po.UserPO" useGeneratedKeys="true" keyProperty="userId">
+        INSERT INTO user (username, password, real_name, gender, avatar,
+                          email, phone_number, status, delete_status, remark)
+        VALUES (#{username}, #{password}, #{realName}, #{gender}, #{avatar},
+                #{email}, #{phoneNumber}, #{status}, #{deleteStatus}, #{remark})
+    </insert>
+    
+    <!-- 更新用户 -->
+    <update id="update" parameterType="cn.culpro.infrastructure.dao.po.UserPO">
+        UPDATE user
+        <set>
+            <if test="username != null">
+                username = #{username},
+            </if>
+            <if test="password != null">
+                password = #{password},
+            </if>
+            <if test="realName != null">
+                real_name = #{realName},
+            </if>
+            <if test="gender != null">
+                gender = #{gender},
+            </if>
+            <if test="avatar != null">
+                avatar = #{avatar},
+            </if>
+            <if test="email != null">
+                email = #{email},
+            </if>
+            <if test="phoneNumber != null">
+                phone_number = #{phoneNumber},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="deleteStatus != null">
+                delete_status = #{deleteStatus},
+            </if>
+            <if test="remark != null">
+                remark = #{remark},
+            </if>
+        </set>
+        WHERE user_id = #{userId}
+    </update>
+    
+    <!-- 根据用户ID查询用户 -->
+    <select id="selectById" resultMap="UserMap">
+        SELECT *
+        FROM user
+        WHERE user_id = #{userId}
+          AND delete_status = 0
+    </select>
+    
+    <!-- 根据用户名查询用户 -->
+    <select id="selectByUsername" resultMap="UserMap">
+        SELECT *
+        FROM user
+        WHERE username = #{username}
+          AND delete_status = 0
+    </select>
+    
+    <!-- 查询所有用户 -->
+    <select id="selectAll" resultMap="UserMap">
+        SELECT *
+        FROM user
+        WHERE delete_status = 0
+    </select>
+    
+    <!-- 分页查询用户 -->
+    <select id="selectByPage" resultMap="UserMap">
+        SELECT *
+        FROM user
+        WHERE delete_status = 0
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+    
+    <!-- 根据角色ID查询用户 -->
+    <select id="selectByRoleId" resultMap="UserMap">
+        SELECT u.*
+        FROM user u
+                 INNER JOIN user_role ur ON u.user_id = ur.user_id
+        WHERE ur.role_id = #{roleId}
+          AND u.delete_status = 0
+    </select>
+    
+    <!-- 新增用户角色关联 -->
+    <insert id="insertUserRole" parameterType="cn.culpro.infrastructure.dao.po.UserRolePO">
+        INSERT INTO user_role (user_id, role_id)
+        VALUES (#{userId}, #{roleId})
+    </insert>
+    
+    <!-- 删除用户角色关联 -->
+    <delete id="deleteUserRole">
+        DELETE
+        FROM user_role
+        WHERE user_id = #{userId}
+          AND role_id = #{roleId}
+    </delete>
+    
+    <!-- 删除用户所有角色关联 -->
+    <delete id="deleteUserRoleByUserId">
+        DELETE
+        FROM user_role
+        WHERE user_id = #{userId}
+    </delete>
+    
+    <!-- 查询用户角色关联 -->
+    <select id="selectUserRoleByUserId" resultMap="UserRoleMap">
+        SELECT user_id, role_id
+        FROM user_role
+        WHERE user_id = #{userId}
+    </select>
+</mapper> 

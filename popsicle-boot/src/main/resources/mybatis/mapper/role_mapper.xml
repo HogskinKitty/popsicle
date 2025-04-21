@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.culpro.infrastructure.dao.IRoleDao">
+    <!-- 角色结果映射 -->
+    <resultMap id="RoleMap" type="cn.culpro.infrastructure.dao.po.RolePO">
+        <id column="role_id" property="roleId"/>
+        <result column="role_name" property="roleName"/>
+        <result column="role_code" property="roleCode"/>
+        <result column="role_desc" property="roleDesc"/>
+        <result column="sort" property="roleSort"/>
+        <result column="data_scope" property="dataScope"/>
+        <result column="status" property="status"/>
+        <result column="delete_status" property="deleteStatus"/>
+        <result column="remark" property="remark"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+    
+    <!-- 角色菜单关联结果映射 -->
+    <resultMap id="RoleMenuMap" type="cn.culpro.infrastructure.dao.po.RoleMenuPO">
+        <result column="role_id" property="roleId"/>
+        <result column="menu_id" property="menuId"/>
+    </resultMap>
+    
+    <!-- 新增角色 -->
+    <insert id="insert" parameterType="cn.culpro.infrastructure.dao.po.RolePO" useGeneratedKeys="true" keyProperty="roleId">
+        INSERT INTO role (role_name, role_code, role_desc, sort, data_scope,
+                          status, delete_status, remark)
+        VALUES (#{roleName}, #{roleCode}, #{roleDesc}, #{roleSort}, #{dataScope},
+                #{status}, #{deleteStatus}, #{remark})
+    </insert>
+    
+    <!-- 更新角色 -->
+    <update id="update" parameterType="cn.culpro.infrastructure.dao.po.RolePO">
+        UPDATE role
+        <set>
+            <if test="roleName != null">
+                role_name = #{roleName},
+            </if>
+            <if test="roleCode != null">
+                role_code = #{roleCode},
+            </if>
+            <if test="roleDesc != null">
+                role_desc = #{roleDesc},
+            </if>
+            <if test="roleSort != null">
+                sort = #{roleSort},
+            </if>
+            <if test="dataScope != null">
+                data_scope = #{dataScope},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="deleteStatus != null">
+                delete_status = #{deleteStatus},
+            </if>
+            <if test="remark != null">
+                remark = #{remark},
+            </if>
+        </set>
+        WHERE role_id = #{roleId}
+    </update>
+    
+    <!-- 根据角色ID查询角色 -->
+    <select id="selectById" resultMap="RoleMap">
+        SELECT *
+        FROM role
+        WHERE role_id = #{roleId}
+          AND delete_status = 0
+    </select>
+    
+    <!-- 根据角色编码查询角色 -->
+    <select id="selectByRoleCode" resultMap="RoleMap">
+        SELECT *
+        FROM role
+        WHERE role_code = #{roleCode}
+          AND delete_status = 0
+    </select>
+    
+    <!-- 查询所有角色 -->
+    <select id="selectAll" resultMap="RoleMap">
+        SELECT *
+        FROM role
+        WHERE delete_status = 0
+    </select>
+    
+    <!-- 分页查询角色 -->
+    <select id="selectByPage" resultMap="RoleMap">
+        SELECT *
+        FROM role
+        WHERE delete_status = 0
+        ORDER BY sort ASC, create_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+    
+    <!-- 根据用户ID查询角色 -->
+    <select id="selectByUserId" resultMap="RoleMap">
+        SELECT r.*
+        FROM role r
+                 INNER JOIN user_role ur ON r.role_id = ur.role_id
+        WHERE ur.user_id = #{userId}
+          AND r.delete_status = 0
+    </select>
+    
+    <!-- 新增角色菜单关联 -->
+    <insert id="insertRoleMenu" parameterType="cn.culpro.infrastructure.dao.po.RoleMenuPO">
+        INSERT INTO role_menu (role_id, menu_id)
+        VALUES (#{roleId}, #{menuId})
+    </insert>
+    
+    <!-- 删除角色菜单关联 -->
+    <delete id="deleteRoleMenu">
+        DELETE
+        FROM role_menu
+        WHERE role_id = #{roleId}
+          AND menu_id = #{menuId}
+    </delete>
+    
+    <!-- 删除角色所有菜单关联 -->
+    <delete id="deleteRoleMenuByRoleId">
+        DELETE
+        FROM role_menu
+        WHERE role_id = #{roleId}
+    </delete>
+    
+    <!-- 查询角色菜单关联 -->
+    <select id="selectRoleMenuByRoleId" resultMap="RoleMenuMap">
+        SELECT role_id, menu_id
+        FROM role_menu
+        WHERE role_id = #{roleId}
+    </select>
+</mapper> 

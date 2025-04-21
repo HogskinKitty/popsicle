@@ -1,7 +1,7 @@
 ---
 description: 
 globs: 
-alwaysApply: true
+alwaysApply: false
 ---
 # SpringBoot DDD架构风格设计规范
 
@@ -79,6 +79,8 @@ popsicle-domain/
     │   │   ├── entity/               # 实体
     │   │   └── valobj/               # 值对象
     │   └── service/                  # 领域服务
+    │   │   ├── IxxxService.java      # 领域服务接口
+    │   └── └── xxxService.java       # 领域服务实现
     ├── ${聚合名2}/                    # 其他聚合
     └── ...
 ```
@@ -105,7 +107,7 @@ popsicle-domain/
 
 4. **领域服务 (Domain Service)**
    - 处理跨聚合的业务逻辑
-   - 命名为`I${服务名}Service`，具体实现命名`${服务名}Service`
+   - 接口命名为`I${服务名}Service`，具体实现命名`${服务名}Service`
 
 5. **仓储接口 (Repository Interface)**
    - 定义聚合的持久化方法
@@ -130,7 +132,7 @@ popsicle-application/
     │   │   ├── Query.java           # 查询对象
     │   │   └── Handler.java         # 查询处理器
     │   └── service/                 # 应用服务
-    │       └── ${业务功能}Service.java # 应用服务实现
+    │       └── ${业务功能}ApplicationService.java # 应用服务实现
     └── ...
 ```
 
@@ -162,7 +164,7 @@ popsicle-infrastructure/
     │   ├── port/                  # 接口实现
     │   └── repository/            # 仓储实现
     ├── dao/                       # 数据访问
-    │   ├── mapper/                # MyBatis Mapper
+    │   ├── xxxDao.java            # 数据访问接口（MyBatis 接口映射）
     │   ├── po/                    # 持久化对象
     │   │   └── converter/         # PO与领域对象转换器
     ├── event/                     # 事件实现
@@ -176,7 +178,12 @@ popsicle-infrastructure/
 1. **仓储实现**
    - 实现领域层定义的仓储接口
    - 命名为`${聚合名}Repository`
-   - 负责对象的持久化和数据库交互
+   - 负责调用数据访问层，实现仓储功能
+
+2. **数据访问层 (DAO)**
+   - 封装数据库操作
+   - 命名为`I${DAO名}Dao`
+   - 提供数据库查询和操作方法
 
 2. **持久化对象 (PO)**
    - 与数据库表结构一一对应
@@ -201,6 +208,7 @@ popsicle-infrastructure/
 popsicle-trigger/
 └── src/main/java/cn/culpro/trigger/
     ├── http/                     # HTTP控制器
+    │   ├── dto/                  # 请求和响应DTO（根据具体的功能模块建立子包存放）
     │   └── ${功能模块}Controller.java
     ├── job/                      # 定时任务
     │   └── ${任务名}Job.java
@@ -219,8 +227,8 @@ popsicle-trigger/
 
 2. **命名与路径**
    - 命名为`${功能模块}Controller`
-   - URI遵循RESTful设计原则
-   - 请求/响应使用api模块中的DTO对象
+   - URI遵循RESTful设计原则，但请求统一使用`/api/版本开始/功能模块`，如：`/api/v1/auth`
+   - 请求/响应使用当前模块中的`*http.dto`包下DTO对象
 
 ### 5.3 定时任务规范
 
@@ -255,6 +263,7 @@ popsicle-api/
    - 定义系统对外的数据结构
    - 不包含业务逻辑
    - 仅包含数据和简单的校验规则
+   - 当前项目为SpringBoot单体架构，暂时不适用此模块，作为保留模块
 
 2. **命名**
    - 请求DTO: `${功能}Request`
@@ -297,6 +306,11 @@ popsicle-types/
    - 跨领域的通用模型定义
    - 命名为`${模型名}`
 
+4. **统一响应** 
+   - 响应结果使用当前模块中 model 包下的 ResponseDTO
+   - 响应状态码统一使用当前模块中 enums 包下的 ResponseCode
+   - 分页相关统一使用 PageParam和PageResult，具体使用为继承这些类
+
 ## 8. 启动层 (popsicle-boot) 设计规范
 
 ### 8.1 启动层结构
@@ -314,6 +328,8 @@ popsicle-boot/
     │       ├── application.yml   # 主配置文件
     │       ├── application-*.yml # 环境配置文件
     │       └── mybatis/          # MyBatis配置和映射
+    |           ├── config/       # MyBatis配置文件
+    │           └── mapper/       # MyBatis映射xml
     └── test/                     # 测试代码
 ```
 
@@ -391,3 +407,179 @@ popsicle-boot/
 5. **值对象不变性**: 确保值对象创建后不可修改
 6. **实体唯一性**: 实体通过ID标识，而非属性比较
 7. **防腐层**: 隔离外部系统，防止污染领域模型
+
+## 11. 代码注释规范
+
+### 11.1 注释类型和用途
+
+1. **类注释**
+   - 描述类的用途、职责和核心功能
+   - 包含作者、创建日期和版本信息
+   - 使用JavaDoc格式
+
+2. **方法注释**
+   - 描述方法功能、参数和返回值
+   - 说明异常抛出条件
+   - 使用JavaDoc格式
+
+3. **字段注释**
+   - 解释字段含义和作用
+   - 说明字段约束和验证规则
+   - 使用单行或多行注释
+
+4. **代码块注释**
+   - 解释复杂逻辑的目的和思路
+   - 标注算法关键步骤
+   - 使用行内或块注释
+
+### 11.2 注释格式规范
+
+1. **JavaDoc规范**
+```java
+/**
+ * 类描述：该类的主要职责和功能
+ *
+ * @author 作者
+ * @date 创建日期
+ */
+public class SampleClass {
+
+    /**
+     * 方法描述：该方法的主要功能
+     *
+     * @param param1 参数1的说明
+     * @param param2 参数2的说明
+     * @return 返回值的说明
+     * @throws ExceptionType 可能抛出的异常及条件
+     */
+    public ReturnType methodName(Type param1, Type param2) throws ExceptionType {
+        // 方法实现
+    }
+}
+```
+
+2. **单行注释**
+   - 紧贴代码上方，保持一致缩进
+   - 简洁说明代码意图
+   - 以"//"开始，之后加一个空格
+
+3. **行内注释**
+   - 与代码间隔两个空格
+   - 简短精确
+   - 避免陈述显而易见的内容
+
+### 11.3 注释内容规范
+
+1. **领域模型注释**
+   - 聚合根：说明业务概念和边界
+   - 实体：描述业务意义和生命周期
+   - 值对象：解释业务特征和不变性规则
+   - 领域服务：阐述跨聚合业务逻辑
+
+2. **应用层注释**
+   - 应用服务：说明用例流程和编排逻辑
+   - 命令/查询：描述意图和处理流程
+   - 事件处理：解释事件监听目的和后续操作
+
+3. **基础设施注释**
+   - 仓储实现：说明持久化策略和优化方式
+   - 外部接口：描述集成点和依赖关系
+   - 技术实现：解释特定技术选型理由
+
+### 11.4 特殊注释标记
+
+1. **TODO注释**
+   - 标记待完成的功能点
+   - 包含负责人和预计完成时间
+   - 格式：`// TODO(开发者): 待完成内容 [预计完成日期]`
+
+2. **FIXME注释**
+   - 标记已知问题需要修复
+   - 说明问题影响和修复优先级
+   - 格式：`// FIXME(开发者): 问题描述 [优先级]`
+
+3. **DEPRECATED注释**
+   - 标记已废弃但暂未移除的代码
+   - 提供替代方案或迁移建议
+   - 格式：`// DEPRECATED: 废弃原因，建议使用...替代`
+
+### 11.5 注释使用原则
+
+1. **注释更新**
+   - 代码变更时同步更新相关注释
+   - 确保注释与代码保持一致
+   - 防止误导性注释
+
+2. **避免过度注释**
+   - 不注释显而易见的代码
+   - 优先通过良好的命名和结构提高可读性
+   - 注释解释"为什么"而非"是什么"
+
+3. **关键业务规则注释**
+   - 详细说明核心业务规则和约束
+   - 解释特殊处理的业务原因
+   - 引用相关业务需求或规范文档
+
+### 11.6 领域模型注释示例
+
+```java
+/**
+ * 订单聚合根
+ * <p>
+ * 负责维护订单生命周期和内部一致性，包括订单项、支付和配送信息
+ * <p>
+ * 订单相关操作的唯一入口
+ * 
+ * @author HogskinKitty
+ * @date 2025/04/19
+ */
+public class OrderAggregate implements Aggregate<OrderId> {
+
+    /**
+     * 订单状态
+     * <p>
+     * 控制订单操作的有效性，确保状态转换符合业务规则
+     */
+    private OrderStatusVO status;
+
+    /**
+     * 计算订单总金额
+     * <p>
+     * 基于所有订单项的价格和数量，应用折扣规则
+     *
+     * @return 订单总金额
+     */
+    public Money calculateTotalAmount() {
+        // 实现
+    }
+}
+```
+
+### 11.7 应用层注释示例
+
+```java
+/**
+ * 处理下单业务流程
+ * <p>
+ * 协调订单创建、库存检查和支付初始化等领域服务
+ * 
+ * @author HogskinKitty
+ * @date 2025/04/19
+ */
+public class CreateOrderCommandHandler implements CommandHandler<CreateOrderCommand, OrderId> {
+
+    /**
+     * 执行下单命令
+     * <p>
+     * 流程：1.创建订单 2.检查库存 3.锁定商品 4.初始化支付
+     *
+     * @param command 下单命令，包含商品信息和用户选择
+     * @return 新创建的订单ID
+     * @throws InsufficientStockException 库存不足时抛出
+     */
+    @Override
+    public OrderId handle(CreateOrderCommand command) {
+        // 实现
+    }
+}
+```

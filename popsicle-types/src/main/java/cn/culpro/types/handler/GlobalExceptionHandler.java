@@ -1,83 +1,126 @@
 package cn.culpro.types.handler;
 
 import cn.culpro.types.enums.ResponseCode;
-import cn.culpro.types.exception.AppException;
+import cn.culpro.types.exception.BusinessException;
 import cn.culpro.types.model.ResponseDTO;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.context.request.RequestAttributes;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
-import java.util.Map;
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
  * 全局异常处理器
+ * <p>
+ * 统一处理系统中的异常，转换为标准响应格式
  *
  * @author HogskinKitty
- * @date 2024/10/04
+ * @date 2025/04/19
  */
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     
     /**
-     * 获取当前请求 URL
+     * 处理业务异常
+     *
+     * @param e 业务异常
+     * @return 统一响应
      */
-    private String getCurrentRequestUrl() {
-        RequestAttributes request = RequestContextHolder.getRequestAttributes();
-        if (null == request) {
-            return null;
-        }
-        ServletRequestAttributes servletRequest = (ServletRequestAttributes) request;
-        return servletRequest.getRequest().getRequestURI();
+    @ExceptionHandler(BusinessException.class)
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseDTO<Void> handleBusinessException(BusinessException e) {
+        log.error("业务异常: {}", e.getMessage());
+        return ResponseDTO.<Void>builder().code(e.getCode()).info(e.getInfo()).build();
     }
     
     /**
-     * 处理全局的异常
+     * 处理参数校验异常 (JSR-303 注解校验)
      *
-     * @param e e 全局异常
-     * @return {@link ResponseDTO }<{@link ? }>
-     */
-    @ExceptionHandler(Exception.class)
-    public ResponseDTO<String> handleException(Exception e) {
-        log.error("捕获全局异常,URL:{}", getCurrentRequestUrl(), e);
-        return ResponseDTO.<String>builder().code(ResponseCode.UN_ERROR.getCode()).info(ResponseCode.UN_ERROR.getInfo()).build();
-    }
-    
-    /**
-     * 处理自定义应用程序异常
-     *
-     * @param e e 自定义应用程序异常
-     * @return {@link ResponseDTO }<{@link String }>
-     */
-    @ExceptionHandler(AppException.class)
-    public ResponseDTO<String> handleAppException(AppException e) {
-        log.error("捕获应用程序异常,URL:{}", getCurrentRequestUrl(), e);
-        return ResponseDTO.<String>builder().code(e.getCode()).info(e.getInfo()).build();
-    }
-    
-    /**
-     * 处理参数校验异常
-     *
-     * @param e 方法参数校验异常
-     * @return {@link ResponseDTO }<{@link Map }<{@link String }, {@link String }>>具体的错误信息
+     * @param e 参数校验异常
+     * @return 统一响应
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseDTO<Map<String, String>> handleValidationException(MethodArgumentNotValidException e) {
-        Map<String, String> infoMap = e.getBindingResult()
-                .getFieldErrors()
-                .stream()
-                .collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage));
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseDTO<Void> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
+        List<FieldError> fieldErrors = e.getBindingResult().getFieldErrors();
+        String errorMessage = fieldErrors.stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .collect(Collectors.joining(", "));
         
-        return ResponseDTO.<Map<String, String>>builder()
-                .code(ResponseCode.ILLEGAL_PARAMETER.getCode())
-                .info(ResponseCode.ILLEGAL_PARAMETER.getInfo())
-                .data(infoMap)
-                .build();
+        log.error("参数校验失败: {}", errorMessage);
+        return ResponseDTO.fail(ResponseCode.ILLEGAL_PARAMETER, errorMessage);
     }
-}
+    
+    /**
+     * 处理参数绑定异常
+     *
+     * @param e 参数绑定异常
+     * @return 统一响应
+     */
+    @ExceptionHandler(BindException.class)
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseDTO<Void> handleBindException(BindException e) {
+        List<FieldError> fieldErrors = e.getBindingResult().getFieldErrors();
+        String errorMessage = fieldErrors.stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .collect(Collectors.joining(", "));
+        
+        log.error("参数绑定失败: {}", errorMessage);
+        return ResponseDTO.fail(ResponseCode.ILLEGAL_PARAMETER, errorMessage);
+    }
+    
+    /**
+     * 处理约束违反异常
+     *
+     * @param e 约束违反异常
+     * @return 统一响应
+     */
+    @ExceptionHandler(ConstraintViolationException.class)
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseDTO<Void> handleConstraintViolationException(ConstraintViolationException e) {
+        Set<ConstraintViolation<?>> violations = e.getConstraintViolations();
+        String errorMessage = violations.stream()
+                .map(violation -> violation.getPropertyPath() + ": " + violation.getMessage())
+                .collect(Collectors.joining(", "));
+        
+        log.error("约束违反异常: {}", errorMessage);
+        return ResponseDTO.fail(ResponseCode.ILLEGAL_PARAMETER, errorMessage);
+    }
+    
+    /**
+     * 处理缺少请求参数异常
+     *
+     * @param e 缺少请求参数异常
+     * @return 统一响应
+     */
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseDTO<Void> handleMissingServletRequestParameterException(MissingServletRequestParameterException e) {
+        log.error("缺少必要参数: {}", e.getMessage());
+        return ResponseDTO.fail(ResponseCode.MISSING_PARAMETER, "缺少必要参数: " + e.getParameterName());
+    }
+    
+    /**
+     * 处理其他未知异常
+     *
+     * @param e 未知异常
+     * @return 统一响应
+     */
+    @ExceptionHandler(Exception.class)
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseDTO<Void> handleException(Exception e) {
+        log.error("系统异常", e);
+        return ResponseDTO.fail(ResponseCode.SERVER_ERROR);
+    }
+} 
