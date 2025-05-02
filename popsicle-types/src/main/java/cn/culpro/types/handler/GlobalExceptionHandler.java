@@ -1,7 +1,7 @@
 package cn.culpro.types.handler;
 
 import cn.culpro.types.enums.ResponseCode;
-import cn.culpro.types.exception.BusinessException;
+import cn.culpro.types.exception.AppException;
 import cn.culpro.types.model.ResponseDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -37,9 +37,9 @@ public class GlobalExceptionHandler {
      * @param e 业务异常
      * @return 统一响应
      */
-    @ExceptionHandler(BusinessException.class)
+    @ExceptionHandler(AppException.class)
     @ResponseStatus(HttpStatus.OK)
-    public ResponseDTO<Void> handleBusinessException(BusinessException e) {
+    public ResponseDTO<Void> handleBusinessException(AppException e) {
         log.error("业务异常: {}", e.getMessage());
         return ResponseDTO.<Void>builder().code(e.getCode()).info(e.getInfo()).build();
     }

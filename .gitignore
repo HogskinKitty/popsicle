@@ -39,3 +39,4 @@ build/
 /data/
 /.idea/
 /docs/dev-ops/log/
+/popsicle-boot/data/

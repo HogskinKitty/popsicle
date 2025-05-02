@@ -32,7 +32,7 @@ public class CreateUserCommand {
     /**
      * 姓名
      */
-    private String name;
+    private String realName;
     
     /**
      * 邮箱
@@ -42,5 +42,5 @@ public class CreateUserCommand {
     /**
      * 手机号
      */
-    private String phone;
+    private String phoneNumber;
 } 

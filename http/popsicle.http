@@ -1,0 +1,10 @@
+### 创建用户
+POST http://localhost:8091/api/v1/users
+Content-Type: application/json
+
+{
+  "username": "HogskinKitty13",
+  "realName": "猪皮猫",
+  "email": "18011090588@163.com",
+  "phoneNumber": "19130610587"
+}

@@ -12,12 +12,12 @@ thread:
         block-queue-size: 5000
         policy: CallerRunsPolicy
 
-# 数据库配置；启动时配置数据库资源信息
 spring:
+  # 数据源配置
   datasource:
     username: root
     password: 123456
-    url: jdbc:mysql://127.0.0.1:13306/popsicle?useUnicode=true&characterEncoding=utf8&autoReconnect=true&zeroDateTimeBehavior=convertToNull&serverTimezone=UTC&useSSL=true
+    url: jdbc:mysql://192.168.31.222:13306/popsicle?useUnicode=true&characterEncoding=utf8&autoReconnect=true&zeroDateTimeBehavior=convertToNull&serverTimezone=UTC&useSSL=true
     driver-class-name: com.mysql.cj.jdbc.Driver
   hikari:
     pool-name: Retail_HikariCP
@@ -29,6 +29,47 @@ spring:
     connection-timeout: 30000 #数据库连接超时时间,默认30秒，即30000
     connection-test-query: SELECT 1
   type: com.zaxxer.hikari.HikariDataSource
+
+  # 邮件配置
+  mail:
+    host: smtp.126.com
+    username: zymdev@126.com
+    password: FRyhup6D77wcYYpj
+    protocol: smtp
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.starttls.required: true
+
+  # Redis 配置
+  redis:
+    # 地址
+    host: 192.168.31.222
+    port: 16379
+    # 连接超时时间
+    timeout: 10s
+    lettuce:
+      pool:
+        # 连接池最大连接数
+        max-active: 8
+        # 连接池最大阻塞等待时间（使用负值表示没有限制）
+        max-wait: -1ms
+        # 连接池中的最大空闲连接
+        max-idle: 8
+        # 连接池中的最小空闲连接
+        min-idle: 0
+
+  # RabbitMQ 配置
+  rabbitmq:
+    addresses: 192.168.31.222
+    port: 5672
+    username: admin
+    password: admin
+    listener:
+      simple:
+        prefetch: 1 # 每次投递n个消息，消费完在投递n个
+    topic:
+      user_created: user_created
 
 # MyBatis 配置
 mybatis:
@@ -42,20 +83,58 @@ jwt:
   # 令牌有效期（秒）
   expiration: 86400
 
+# 短信服务配置
+sms:
+  # 默认短信提供商（aliyun）
+  default-provider: aliyun
+
+  # 验证码相关配置
+  verification:
+    # 验证码有效期（分钟）
+    expire-minutes: 5
+    # 验证码长度
+    length: 6
+    # 是否允许数字以外的字符
+    allow-letters: false
+
+  # 默认模板ID配置
+  default-template-id:
+    # 验证码短信模板ID
+    verification: SMS_154950909
+    # 通知短信模板ID
+    notification: SMS_154950909
+    # 营销短信模板ID
+    marketing: SMS_154950909
+
+  # 阿里云短信配置
+  aliyun:
+    # 访问密钥ID
+    access-key: YOUR_ALIYUN_ACCESS_KEY
+    # 访问密钥密码
+    secret-key: YOUR_ALIYUN_SECRET_KEY
+    # 短信签名
+    sign-name: 阿里云短信测试
+    # 服务接入点
+    endpoint: dysmsapi.aliyuncs.com
+    # 阿里云特定模板配置
+    template-id:
+      verification: SMS_154950909
+      notification: SMS_154950909
+      marketing: SMS_154950909
+
 # 安全配置
 security:
-  # 不需要认证的URL
   ignore:
     urls:
-      - /api/v1/auth/login
-      - /api/v1/auth/refresh
-      - /swagger-ui.html
-      - /swagger-resources/**
-      - /v3/api-docs
-      - /v3/api-docs/**
-      - /webjars/**
-      - /favicon.ico
-      - /error
+      - /**
+#      - /api/v1/auth/refresh
+#      - /swagger-ui.html
+#      - /swagger-resources/**
+#      - /v3/api-docs
+#      - /v3/api-docs/**
+#      - /webjars/**
+#      - /favicon.ico
+#      - /error
 
 # 日志
 logging:

@@ -1,4 +1,4 @@
-package cn.culpro.domain.system.service;
+package cn.culpro.domain.system.service.permission;
 
 import cn.culpro.domain.system.adapter.repository.IMenuRepository;
 import cn.culpro.domain.system.adapter.repository.IRoleRepository;

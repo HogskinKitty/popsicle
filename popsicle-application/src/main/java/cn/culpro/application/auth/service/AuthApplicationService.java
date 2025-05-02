@@ -3,8 +3,8 @@ package cn.culpro.application.auth.service;
 import cn.culpro.application.auth.command.LoginCommand;
 import cn.culpro.domain.system.model.aggregate.MenuAggregate;
 import cn.culpro.domain.system.model.aggregate.UserAggregate;
-import cn.culpro.domain.system.service.IPermissionCheckService;
-import cn.culpro.domain.system.service.IUserAuthService;
+import cn.culpro.domain.system.service.auth.IAuthService;
+import cn.culpro.domain.system.service.permission.IPermissionCheckService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +23,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class AuthApplicationService {
     
-    private final IUserAuthService userAuthService;
+    private final IAuthService userAuthService;
     
     private final IPermissionCheckService permissionCheckService;
     

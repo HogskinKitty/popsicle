@@ -40,6 +40,30 @@ public interface IUserRepository {
     Optional<UserAggregate> findByUsername(String username);
     
     /**
+     * 统计指定用户名的用户数量
+     *
+     * @param username 用户名
+     * @return 用户数量
+     */
+    int countByUsername(String username);
+    
+    /**
+     * 根据手机号查询用户
+     *
+     * @param phoneNumber 手机号
+     * @return 用户聚合根
+     */
+    Optional<UserAggregate> findByPhoneNumber(String phoneNumber);
+    
+    /**
+     * 统计指定手机号的用户数量
+     *
+     * @param phoneNumber 手机号
+     * @return 用户数量
+     */
+    int countByPhoneNumber(String phoneNumber);
+    
+    /**
      * 查询所有用户
      *
      * @return 用户聚合根列表

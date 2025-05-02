@@ -70,9 +70,21 @@
         WHERE user_id = #{userId}
     </update>
     
-    <!-- 根据用户ID查询用户 -->
+    <!-- 根据用户ID查询用户（完整信息） -->
     <select id="selectById" resultMap="UserMap">
-        SELECT *
+        SELECT user_id,
+               username,
+               password,
+               real_name,
+               gender,
+               avatar,
+               email,
+               phone_number,
+               status,
+               delete_status,
+               remark,
+               create_time,
+               update_time
         FROM user
         WHERE user_id = #{userId}
           AND delete_status = 0
@@ -80,22 +92,69 @@
     
     <!-- 根据用户名查询用户 -->
     <select id="selectByUsername" resultMap="UserMap">
-        SELECT *
+        SELECT user_id,
+               username,
+               password,
+               status,
+               delete_status
         FROM user
         WHERE username = #{username}
           AND delete_status = 0
     </select>
     
+    <!-- 统计指定用户名的用户数量 -->
+    <select id="countByUsername" resultType="int">
+        SELECT COUNT(1)
+        FROM user
+        WHERE username = #{username}
+          AND delete_status = 0
+    </select>
+    
+    <!-- 根据手机号查询用户 -->
+    <select id="selectByPhoneNumber" resultMap="UserMap">
+        SELECT user_id,
+               phone_number
+        FROM user
+        WHERE phone_number = #{phoneNumber}
+          AND delete_status = 0
+    </select>
+    
+    <!-- 统计指定手机号的用户数量 -->
+    <select id="countByPhoneNumber" resultType="int">
+        SELECT COUNT(1)
+        FROM user
+        WHERE phone_number = #{phoneNumber}
+          AND delete_status = 0
+    </select>
+    
     <!-- 查询所有用户 -->
     <select id="selectAll" resultMap="UserMap">
-        SELECT *
+        SELECT user_id,
+               username,
+               real_name,
+               gender,
+               avatar,
+               email,
+               phone_number,
+               status,
+               create_time,
+               update_time
         FROM user
         WHERE delete_status = 0
     </select>
     
     <!-- 分页查询用户 -->
     <select id="selectByPage" resultMap="UserMap">
-        SELECT *
+        SELECT user_id,
+               username,
+               real_name,
+               gender,
+               avatar,
+               email,
+               phone_number,
+               status,
+               create_time,
+               update_time
         FROM user
         WHERE delete_status = 0
         ORDER BY create_time DESC
@@ -104,7 +163,7 @@
     
     <!-- 根据角色ID查询用户 -->
     <select id="selectByRoleId" resultMap="UserMap">
-        SELECT u.*
+        SELECT u.user_id, u.username, u.real_name, u.status
         FROM user u
                  INNER JOIN user_role ur ON u.user_id = ur.user_id
         WHERE ur.role_id = #{roleId}

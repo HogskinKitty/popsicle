@@ -37,17 +37,10 @@ public class UserRequest {
     private String username;
     
     /**
-     * 密码
+     * 真实姓名
      */
-    @NotBlank(message = "密码不能为空")
-    @Size(min = 6, max = 20, message = "密码长度必须在6-20个字符之间")
-    private String password;
-    
-    /**
-     * 姓名
-     */
-    @NotBlank(message = "姓名不能为空")
-    private String name;
+    @NotBlank(message = "真实姓名不能为空")
+    private String realName;
     
     /**
      * 邮箱
@@ -59,5 +52,5 @@ public class UserRequest {
      * 手机号
      */
     @Pattern(regexp = "^1[3-9]\\d{9}$", message = "手机号格式不正确")
-    private String phone;
+    private String phoneNumber;
 } 

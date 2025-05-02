@@ -1,4 +1,4 @@
-package cn.culpro.domain.system.service;
+package cn.culpro.domain.system.service.auth;
 
 import cn.culpro.domain.system.model.aggregate.UserAggregate;
 
@@ -10,7 +10,7 @@ import cn.culpro.domain.system.model.aggregate.UserAggregate;
  * @author HogskinKitty
  * @date 2025/04/19
  */
-public interface IUserAuthService {
+public interface IAuthService {
     
     /**
      * 验证用户名和密码

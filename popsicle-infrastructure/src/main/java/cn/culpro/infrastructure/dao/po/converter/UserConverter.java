@@ -8,8 +8,10 @@ import cn.culpro.infrastructure.dao.po.UserRolePO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
+import org.mapstruct.ReportingPolicy;
 import org.mapstruct.factory.Mappers;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -20,7 +22,7 @@ import java.util.List;
  * @author HogskinKitty
  * @date 2025/04/19
  */
-@Mapper
+@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, unmappedSourcePolicy = ReportingPolicy.IGNORE)
 public interface UserConverter {
     
     UserConverter INSTANCE = Mappers.getMapper(UserConverter.class);
@@ -29,7 +31,7 @@ public interface UserConverter {
      * 将用户PO转换为用户聚合根
      *
      * @param userPO      用户PO
-     * @param userRolePOs 用户角色关联PO列表
+     * @param userRolePOs 用户角色关联PO列表（可为null）
      * @return 用户聚合根
      */
     @Mapping(target = "status", source = "userPO.status", qualifiedByName = "toUserStatusVO")
@@ -54,13 +56,21 @@ public interface UserConverter {
     List<UserRolePO> toUserRolePOs(List<UserRoleEntity> userRoleEntities);
     
     /**
-     * 将用户角色关联PO列表转换为用户角色实体列表
+     * 将用户角色关联PO列表转换为用户角色实体列表 处理userRolePOs为null的情况
      *
      * @param userRolePOs 用户角色关联PO列表
-     * @return 用户角色实体列表
+     * @return 用户角色实体列表，如果输入为null则返回空列表
      */
     @Named("toUserRoleEntities")
-    List<UserRoleEntity> toUserRoleEntities(List<UserRolePO> userRolePOs);
+    default List<UserRoleEntity> toUserRoleEntities(List<UserRolePO> userRolePOs) {
+        if (userRolePOs == null) {
+            return Collections.emptyList();
+        }
+        // 转换为领域实体
+        return convertToUserRoleEntities(userRolePOs);
+    }
+    
+    List<UserRoleEntity> convertToUserRoleEntities(List<UserRolePO> userRolePOs);
     
     /**
      * 将用户角色关联PO转换为用户角色实体

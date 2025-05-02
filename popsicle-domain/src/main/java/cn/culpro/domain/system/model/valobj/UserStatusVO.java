@@ -4,6 +4,9 @@ import lombok.Getter;
 
 /**
  * 用户状态值对象
+ *
+ * @author HogskinKitty
+ * @date 2025/04/21
  */
 @Getter
 public enum UserStatusVO {

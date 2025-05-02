@@ -8,10 +8,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.ExpressionUrlAuthorizationConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,7 +27,6 @@ import javax.annotation.Resource;
  */
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(securedEnabled = true, jsr250Enabled = true, prePostEnabled = true)
 public class SecurityConfig {
     
     @Resource
@@ -60,27 +58,39 @@ public class SecurityConfig {
      */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
-        // 获取配置的白名单URL
-        String[] ignoreUrlArray = ignoreUrlsConfig.getUrls().toArray(new String[0]);
         
-        return httpSecurity
-                // 基于JWT，不需要csrf保护
-                .csrf(AbstractHttpConfigurer::disable)
-                // 基于token，不需要session
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // 未登录和未授权处理
-                .exceptionHandling(handling -> handling.accessDeniedHandler(restfulAccessDeniedHandler)
-                        .authenticationEntryPoint(restAuthenticationEntryPoint))
-                // 请求授权配置
-                .authorizeRequests(authorize -> authorize
-                        // 白名单放行
-                        .antMatchers(ignoreUrlArray).permitAll()
-                        // 允许跨域请求的OPTIONS
-                        .antMatchers(HttpMethod.OPTIONS).permitAll()
-                        // 其余所有请求全部需要鉴权认证
-                        .anyRequest().authenticated())
-                // 添加JWT过滤器
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class).build();
+        ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry registry = httpSecurity.authorizeRequests();
+        
+        // 不需要保护的资源路径允许访问
+        for (String url : ignoreUrlsConfig.getUrls()) {
+            registry.antMatchers(url).permitAll();
+        }
+        
+        // 允许跨域请求的 OPTIONS 请求
+        registry.antMatchers(HttpMethod.OPTIONS).permitAll();
+        
+        // 任何请求都需要身份认证
+        registry.anyRequest()
+                .authenticated()
+                
+                // 关闭跨站请求防护及不使用 Session
+                .and()
+                .csrf()
+                .disable()
+                .sessionManagement()
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                
+                // 自定义权限拒绝处理类
+                .and()
+                .exceptionHandling()
+                .accessDeniedHandler(restfulAccessDeniedHandler)
+                .authenticationEntryPoint(restAuthenticationEntryPoint)
+                
+                // 自定义权限拦截器 JWT 过滤器
+                .and()
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+        
+        return httpSecurity.build();
     }
     
     /**

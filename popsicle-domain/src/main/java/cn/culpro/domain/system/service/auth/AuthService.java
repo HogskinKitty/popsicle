@@ -1,4 +1,4 @@
-package cn.culpro.domain.system.service;
+package cn.culpro.domain.system.service.auth;
 
 import cn.culpro.domain.system.adapter.port.IAuthenticationAdapter;
 import cn.culpro.domain.system.adapter.port.ITokenProvider;
@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class UserAuthService implements IUserAuthService {
+public class AuthService implements IAuthService {
     
     private final ITokenProvider tokenProvider;
     

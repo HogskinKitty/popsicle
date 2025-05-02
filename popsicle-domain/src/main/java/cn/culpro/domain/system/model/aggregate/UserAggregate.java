@@ -96,16 +96,41 @@ public class UserAggregate implements Aggregate<Long> {
     /**
      * 创建新用户
      *
+     * @param username    用户名
+     * @param password    加密后的密码
+     * @param realName    真实姓名
+     * @param gender      性别，默认为3(未知)
+     * @param email       邮箱
+     * @param phoneNumber 手机号码
+     * @return 用户聚合根
+     */
+    public static UserAggregate create(String username, String password, String realName, Integer gender, String email,
+            String phoneNumber) {
+        return UserAggregate.builder()
+                .username(username)
+                .password(password)
+                .realName(realName)
+                .gender(gender != null ? gender : 3)
+                .email(email)
+                .phoneNumber(phoneNumber)
+                .status(UserStatusVO.NORMAL)
+                .deleteStatus(0)
+                .createTime(LocalDateTime.now())
+                .updateTime(LocalDateTime.now())
+                .userRoles(new ArrayList<>())
+                .build();
+    }
+    
+    /**
+     * 创建新用户(简化版)
+     *
      * @param username 用户名
      * @param password 加密后的密码
      * @param realName 真实姓名
      * @return 用户聚合根
      */
     public static UserAggregate create(String username, String password, String realName) {
-        return UserAggregate.builder().username(username).password(password).realName(realName).gender(3) // 默认未知
-                .status(UserStatusVO.NORMAL) // 默认正常状态
-                .deleteStatus(0) // 默认未删除
-                .createTime(LocalDateTime.now()).updateTime(LocalDateTime.now()).userRoles(new ArrayList<>()).build();
+        return create(username, password, realName, 3, null, null);
     }
     
     /**

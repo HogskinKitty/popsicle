@@ -58,6 +58,7 @@ public enum ResponseCode {
     ROLE_IN_USE("5004", "角色正在使用中，无法删除"),
     MENU_IN_USE("5005", "菜单正在使用中，无法删除"),
     PARENT_MENU_NOT_EXISTS("5006", "父级菜单不存在"),
+    PHONE_NUMBER_EXISTS("5007", "手机号已存在"),
     
     // 未知错误
     UNKNOWN_ERROR("9999", "未知错误");

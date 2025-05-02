@@ -70,12 +70,28 @@ public class UserRepository implements IUserRepository {
     public Optional<UserAggregate> findByUsername(String username) {
         // 查询用户
         return userDao.selectByUsername(username).map(userPO -> {
-            // 查询用户角色关系
-            List<UserRolePO> userRolePOs = userDao.selectUserRoleByUserId(userPO.getUserId());
-            
             // 转换为领域对象
-            return UserConverter.INSTANCE.toUserAggregate(userPO, userRolePOs);
+            return UserConverter.INSTANCE.toUserAggregate(userPO, null);
         });
+    }
+    
+    @Override
+    public Optional<UserAggregate> findByPhoneNumber(String phoneNumber) {
+        // 查询用户
+        return userDao.selectByPhoneNumber(phoneNumber).map(userPO -> {
+            // 转换为领域对象
+            return UserConverter.INSTANCE.toUserAggregate(userPO, null);
+        });
+    }
+    
+    @Override
+    public int countByUsername(String username) {
+        return userDao.countByUsername(username);
+    }
+    
+    @Override
+    public int countByPhoneNumber(String phoneNumber) {
+        return userDao.countByPhoneNumber(phoneNumber);
     }
     
     @Override

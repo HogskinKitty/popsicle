@@ -26,10 +26,9 @@ public class UserRequestResponseConverter {
     public CreateUserCommand toCreateUserCommand(UserRequest request) {
         return CreateUserCommand.builder()
                 .username(request.getUsername())
-                .password(request.getPassword())
-                .name(request.getName())
+                .realName(request.getRealName())
                 .email(request.getEmail())
-                .phone(request.getPhone())
+                .phoneNumber(request.getPhoneNumber())
                 .build();
     }
     

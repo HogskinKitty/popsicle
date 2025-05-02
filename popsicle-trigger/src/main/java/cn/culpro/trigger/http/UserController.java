@@ -3,9 +3,11 @@ package cn.culpro.trigger.http;
 import cn.culpro.application.user.command.CreateUserCommand;
 import cn.culpro.application.user.service.UserApplicationService;
 import cn.culpro.domain.system.model.aggregate.UserAggregate;
+import cn.culpro.trigger.http.dto.user.PasswordChangeRequest;
 import cn.culpro.trigger.http.dto.user.UserRequest;
 import cn.culpro.trigger.http.dto.user.UserResponse;
 import cn.culpro.trigger.http.dto.user.converter.UserRequestResponseConverter;
+import cn.culpro.types.exception.AppException;
 import cn.culpro.types.model.ResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -42,8 +44,6 @@ public class UserController {
     
     /**
      * 获取用户列表
-     * <p>
-     * 需要 sys:user:view 权限
      *
      * @return 用户列表
      */
@@ -57,14 +57,12 @@ public class UserController {
     
     /**
      * 获取用户详情
-     * <p>
-     * 需要 sys:user:view 权限或者是用户本人
      *
      * @param userId 用户ID
      * @return 用户详情
      */
     @GetMapping("/{userId}")
-    @PreAuthorize("hasAuthority('sys:user:view') or authentication.principal.username == #userId")
+    @PreAuthorize("hasAuthority('sys:user:view')")
     public ResponseDTO<UserResponse> getUserById(@PathVariable Long userId) {
         Optional<UserAggregate> userOpt = userApplicationService.getUserById(userId);
         return userOpt.map(user -> ResponseDTO.success(converter.toUserResponse(user)))
@@ -73,8 +71,6 @@ public class UserController {
     
     /**
      * 创建用户
-     * <p>
-     * 需要 sys:user:add 权限
      *
      * @param request 用户信息
      * @return 创建结果
@@ -83,15 +79,13 @@ public class UserController {
     @PreAuthorize("hasAuthority('sys:user:add')")
     public ResponseDTO<Long> createUser(@Valid @RequestBody UserRequest request) {
         CreateUserCommand command = converter.toCreateUserCommand(request);
-        Long userId = userApplicationService.createUser(
-                UserAggregate.create(command.getUsername(), command.getPassword(), command.getName()));
+        Long userId = userApplicationService.createUser(command);
         return ResponseDTO.success(userId);
+        
     }
     
     /**
      * 更新用户
-     * <p>
-     * 需要 sys:user:edit 权限
      *
      * @param userId  用户ID
      * @param request 用户信息
@@ -100,25 +94,18 @@ public class UserController {
     @PutMapping("/{userId}")
     @PreAuthorize("hasAuthority('sys:user:edit')")
     public ResponseDTO<Void> updateUser(@PathVariable Long userId, @Valid @RequestBody UserRequest request) {
-        Optional<UserAggregate> userOpt = userApplicationService.getUserById(userId);
-        
-        if (!userOpt.isPresent()) {
-            return ResponseDTO.fail("用户不存在");
+        try {
+            boolean success = userApplicationService.updateUserBasicInfo(userId, request.getRealName(), null, request.getEmail(),
+                    request.getPhoneNumber());
+            
+            return success ? ResponseDTO.success() : ResponseDTO.fail("用户不存在");
+        } catch (AppException e) {
+            return ResponseDTO.fail(e.getMessage());
         }
-        
-        UserAggregate user = userOpt.get();
-        // 更新用户信息
-        user.updateBasicInfo(request.getName(), null, // 性别，从请求中获取或使用默认值
-                request.getEmail(), request.getPhone());
-        
-        userApplicationService.updateUser(user);
-        return ResponseDTO.success();
     }
     
     /**
      * 删除用户
-     * <p>
-     * 需要 sys:user:delete 权限
      *
      * @param userId 用户ID
      * @return 操作结果
@@ -126,7 +113,47 @@ public class UserController {
     @DeleteMapping("/{userId}")
     @PreAuthorize("hasAuthority('sys:user:delete')")
     public ResponseDTO<Void> deleteUser(@PathVariable Long userId) {
-        userApplicationService.deleteUser(userId);
-        return ResponseDTO.success();
+        boolean success = userApplicationService.deleteUser(userId);
+        return success ? ResponseDTO.success() : ResponseDTO.fail("用户不存在");
+    }
+    
+    /**
+     * 启用用户
+     *
+     * @param userId 用户ID
+     * @return 操作结果
+     */
+    @PutMapping("/{userId}/enable")
+    @PreAuthorize("hasAuthority('sys:user:edit')")
+    public ResponseDTO<Void> enableUser(@PathVariable Long userId) {
+        boolean success = userApplicationService.enableUser(userId);
+        return success ? ResponseDTO.success() : ResponseDTO.fail("用户不存在");
+    }
+    
+    /**
+     * 禁用用户
+     *
+     * @param userId 用户ID
+     * @return 操作结果
+     */
+    @PutMapping("/{userId}/disable")
+    @PreAuthorize("hasAuthority('sys:user:edit')")
+    public ResponseDTO<Void> disableUser(@PathVariable Long userId) {
+        boolean success = userApplicationService.disableUser(userId);
+        return success ? ResponseDTO.success() : ResponseDTO.fail("用户不存在");
+    }
+    
+    /**
+     * 修改密码
+     *
+     * @param userId  用户ID
+     * @param request 包含旧密码和新密码的请求
+     * @return 操作结果
+     */
+    @PutMapping("/{userId}/password")
+    @PreAuthorize("hasAuthority('sys:user:edit')")
+    public ResponseDTO<Void> changePassword(@PathVariable Long userId, @Valid @RequestBody PasswordChangeRequest request) {
+        boolean success = userApplicationService.changePassword(userId, request.getOldPassword(), request.getNewPassword());
+        return success ? ResponseDTO.success() : ResponseDTO.fail("用户不存在或密码错误");
     }
 } 
