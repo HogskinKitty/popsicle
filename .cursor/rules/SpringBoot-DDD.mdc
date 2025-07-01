@@ -56,7 +56,7 @@ alwaysApply: false
    - `popsicle-domain` → `popsicle-types`
    - `popsicle-application` → `popsicle-domain`
    - `popsicle-infrastructure` → `popsicle-domain`
-   - `popsicle-trigger` → `popsicle-application`, `popsicle-domain`, `popsicle-api`
+   - `popsicle-trigger` → `popsicle-application`, `popsicle-types`, `popsicle-api`
    - `popsicle-boot` → `popsicle-trigger`, `popsicle-infrastructure`
    
    (符号 "→" 表示 "依赖于")
@@ -527,8 +527,6 @@ public class SampleClass {
  * 订单聚合根
  * <p>
  * 负责维护订单生命周期和内部一致性，包括订单项、支付和配送信息
- * <p>
- * 订单相关操作的唯一入口
  * 
  * @author HogskinKitty
  * @date 2025/04/19
@@ -537,8 +535,6 @@ public class OrderAggregate implements Aggregate<OrderId> {
 
     /**
      * 订单状态
-     * <p>
-     * 控制订单操作的有效性，确保状态转换符合业务规则
      */
     private OrderStatusVO status;
 
